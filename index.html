@@ -1,0 +1,1581 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>SDD – AI-Powered Study Assistant</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --bg: #0d0d12;
+    --bg2: #13131a;
+    --bg3: #1a1a24;
+    --card: #16161f;
+    --card2: #1e1e2a;
+    --border: rgba(255,255,255,0.07);
+    --border2: rgba(255,255,255,0.12);
+    --text: #f0f0f5;
+    --text2: #9090a8;
+    --text3: #5a5a78;
+    --accent: #6b5ef8;
+    --accent2: #8b7bff;
+    --accent-glow: rgba(107,94,248,0.35);
+    --orange: #e8934a;
+    --orange2: #f0a060;
+    --green: #4ade80;
+    --red: #f87171;
+    --yellow: #fbbf24;
+    --radius: 16px;
+    --radius-sm: 10px;
+    --shadow: 0 8px 32px rgba(0,0,0,0.4);
+    --shadow-accent: 0 0 40px rgba(107,94,248,0.2);
+    --font-display: 'Syne', sans-serif;
+    --font-body: 'DM Sans', sans-serif;
+  }
+  [data-theme="light"] {
+    --bg: #f5f5f8;
+    --bg2: #ededf3;
+    --bg3: #e8e8f0;
+    --card: #ffffff;
+    --card2: #f0f0f8;
+    --border: rgba(0,0,0,0.08);
+    --border2: rgba(0,0,0,0.14);
+    --text: #14141e;
+    --text2: #5a5a78;
+    --text3: #9090b0;
+    --accent-glow: rgba(107,94,248,0.15);
+    --shadow: 0 8px 32px rgba(0,0,0,0.1);
+    --shadow-accent: 0 0 40px rgba(107,94,248,0.12);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: var(--font-body);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+    transition: background 0.3s, color 0.3s;
+  }
+
+  /* ===== NOISE OVERLAY ===== */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+    opacity: 0.5;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ===== GRADIENT BG BLOBS ===== */
+  .bg-blobs {
+    position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden;
+  }
+  .bg-blobs::before {
+    content: '';
+    position: absolute; top: -20%; left: -10%;
+    width: 600px; height: 600px;
+    background: radial-gradient(circle, rgba(107,94,248,0.12) 0%, transparent 70%);
+    border-radius: 50%;
+  }
+  .bg-blobs::after {
+    content: '';
+    position: absolute; bottom: -10%; right: -5%;
+    width: 500px; height: 500px;
+    background: radial-gradient(circle, rgba(232,147,74,0.08) 0%, transparent 70%);
+    border-radius: 50%;
+  }
+
+  /* ===== NAVBAR ===== */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 32px;
+    height: 60px;
+    background: rgba(13,13,18,0.7);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    transition: background 0.3s;
+  }
+  [data-theme="light"] nav { background: rgba(245,245,248,0.8); }
+
+  .nav-logo {
+    display: flex; align-items: center; gap: 10px;
+    text-decoration: none;
+  }
+  .logo-avatar {
+    width: 36px; height: 36px;
+    background: linear-gradient(135deg, #6b5ef8, #8b7bff);
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 13px;
+    color: white;
+    letter-spacing: -0.5px;
+    box-shadow: 0 0 16px rgba(107,94,248,0.4);
+  }
+  .nav-title-wrap { display: flex; flex-direction: column; line-height: 1; }
+  .nav-name {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 15px;
+    color: var(--text);
+  }
+  .nav-sub {
+    font-size: 11px;
+    color: var(--accent2);
+    font-weight: 500;
+    margin-top: 1px;
+  }
+
+  .theme-toggle {
+    width: 38px; height: 38px;
+    background: var(--card);
+    border: 1px solid var(--border2);
+    border-radius: 10px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+    transition: all 0.2s;
+    color: var(--text2);
+  }
+  .theme-toggle:hover { background: var(--card2); border-color: var(--accent); color: var(--text); }
+
+  /* ===== MAIN LAYOUT ===== */
+  main { position: relative; z-index: 1; }
+
+  /* ===== LANDING PAGE ===== */
+  #landing {
+    min-height: 100vh;
+    display: flex; align-items: center; justify-content: center;
+    padding: 80px 32px 40px;
+  }
+
+  .landing-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 60px;
+    max-width: 1100px;
+    width: 100%;
+    align-items: center;
+  }
+
+  .landing-left { }
+
+  .ai-badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 6px 14px;
+    background: rgba(107,94,248,0.12);
+    border: 1px solid rgba(107,94,248,0.3);
+    border-radius: 100px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--accent2);
+    margin-bottom: 28px;
+    letter-spacing: 0.2px;
+  }
+  .ai-badge svg { width: 14px; height: 14px; }
+
+  .hero-title {
+    font-family: var(--font-display);
+    font-size: clamp(42px, 5vw, 62px);
+    font-weight: 800;
+    line-height: 1.05;
+    letter-spacing: -2px;
+    margin-bottom: 20px;
+    color: var(--text);
+  }
+  .hero-title .highlight-blue { color: var(--accent2); }
+  .hero-title .highlight-orange { color: var(--orange); }
+
+  .hero-desc {
+    font-size: 15px;
+    color: var(--text2);
+    line-height: 1.7;
+    max-width: 440px;
+    margin-bottom: 40px;
+    font-weight: 400;
+  }
+
+  .feature-pills {
+    display: flex; gap: 12px; flex-wrap: wrap;
+  }
+
+  .feature-pill {
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+    padding: 18px 20px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    min-width: 110px;
+    transition: all 0.2s;
+    cursor: default;
+  }
+  .feature-pill:hover {
+    border-color: rgba(107,94,248,0.4);
+    background: var(--card2);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-accent);
+  }
+  .pill-icon {
+    width: 36px; height: 36px;
+    background: rgba(107,94,248,0.12);
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+  }
+  .pill-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text2);
+    text-align: center;
+    font-family: var(--font-display);
+    letter-spacing: 0.2px;
+  }
+
+  /* ===== UPLOAD CARD ===== */
+  .upload-card {
+    background: var(--card);
+    border: 1px solid var(--border2);
+    border-radius: 20px;
+    padding: 28px;
+    box-shadow: var(--shadow);
+  }
+
+  .upload-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 20px;
+  }
+  .upload-title {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 16px;
+    color: var(--text);
+  }
+  .upload-limit { font-size: 11px; color: var(--text3); }
+
+  .drop-zone {
+    border: 2px dashed var(--border2);
+    border-radius: var(--radius);
+    padding: 32px 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-bottom: 16px;
+    position: relative;
+    overflow: hidden;
+  }
+  .drop-zone:hover, .drop-zone.dragover {
+    border-color: var(--accent);
+    background: rgba(107,94,248,0.05);
+  }
+  .drop-zone input[type="file"] {
+    position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%;
+  }
+  .drop-icon {
+    font-size: 24px;
+    margin-bottom: 10px;
+    color: var(--text3);
+  }
+  .drop-text {
+    font-size: 13px;
+    color: var(--text2);
+  }
+  .drop-text a { color: var(--accent2); cursor: pointer; }
+
+  .divider-or {
+    display: flex; align-items: center; gap: 12px;
+    margin: 16px 0;
+    color: var(--text3);
+    font-size: 11px;
+    letter-spacing: 1px;
+    font-weight: 600;
+  }
+  .divider-or::before, .divider-or::after {
+    content: ''; flex: 1; height: 1px; background: var(--border);
+  }
+
+  .text-area {
+    width: 100%;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 14px;
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 13px;
+    resize: vertical;
+    min-height: 130px;
+    outline: none;
+    transition: border-color 0.2s;
+    line-height: 1.6;
+  }
+  .text-area::placeholder { color: var(--text3); }
+  .text-area:focus { border-color: var(--accent); }
+
+  .start-btn {
+    width: 100%;
+    padding: 16px;
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: var(--radius);
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 15px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    margin-top: 16px;
+    transition: all 0.2s;
+    letter-spacing: 0.3px;
+    box-shadow: 0 4px 20px rgba(107,94,248,0.4);
+  }
+  .start-btn:hover:not(:disabled) {
+    background: var(--accent2);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 28px rgba(107,94,248,0.5);
+  }
+  .start-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+  /* ===== STUDY PAGE ===== */
+  #study-page { display: none; padding-top: 60px; }
+
+  .study-layout {
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    min-height: calc(100vh - 60px);
+  }
+
+  /* SIDEBAR */
+  .sidebar {
+    position: sticky; top: 60px;
+    height: calc(100vh - 60px);
+    overflow-y: auto;
+    background: var(--bg2);
+    border-right: 1px solid var(--border);
+    padding: 24px 0;
+  }
+  .sidebar::-webkit-scrollbar { width: 4px; }
+  .sidebar::-webkit-scrollbar-track { background: transparent; }
+  .sidebar::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 4px; }
+
+  .sidebar-section {
+    padding: 0 16px;
+    margin-bottom: 8px;
+  }
+  .sidebar-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    color: var(--text3);
+    text-transform: uppercase;
+    padding: 8px 4px;
+    margin-bottom: 4px;
+  }
+  .sidebar-btn {
+    display: flex; align-items: center; gap: 10px;
+    width: 100%;
+    padding: 10px 12px;
+    background: transparent;
+    border: none;
+    border-radius: var(--radius-sm);
+    color: var(--text2);
+    font-family: var(--font-body);
+    font-size: 13px;
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.15s;
+  }
+  .sidebar-btn:hover { background: var(--card2); color: var(--text); }
+  .sidebar-btn.active { background: rgba(107,94,248,0.15); color: var(--accent2); font-weight: 500; }
+  .sidebar-btn .s-icon { width: 18px; text-align: center; font-size: 14px; }
+
+  .sidebar-divider { height: 1px; background: var(--border); margin: 12px 16px; }
+
+  .progress-wrap { padding: 0 16px; margin-top: 16px; }
+  .progress-label { font-size: 11px; color: var(--text3); margin-bottom: 6px; }
+  .progress-bar { height: 4px; background: var(--border); border-radius: 99px; overflow: hidden; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent2)); border-radius: 99px; transition: width 0.5s; }
+
+  /* CONTENT AREA */
+  .content-area {
+    padding: 32px 40px;
+    max-width: 860px;
+  }
+
+  /* ===== TABS ===== */
+  .tab-container { margin-bottom: 28px; }
+  .tabs {
+    display: flex; gap: 4px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 4px;
+    width: fit-content;
+  }
+  .tab {
+    padding: 9px 18px;
+    border: none;
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--text2);
+    font-family: var(--font-body);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .tab:hover { color: var(--text); }
+  .tab.active {
+    background: var(--accent);
+    color: white;
+    box-shadow: 0 2px 12px rgba(107,94,248,0.4);
+  }
+
+  /* ===== PANELS ===== */
+  .panel { display: none; animation: fadeIn 0.3s ease; }
+  .panel.active { display: block; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ===== EXPLANATION PANEL ===== */
+  .explanation-content {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 32px;
+    line-height: 1.8;
+    font-size: 14.5px;
+    color: var(--text);
+    white-space: pre-wrap;
+    word-wrap: break-word;
+  }
+  .explanation-content h1, .explanation-content h2, .explanation-content h3 {
+    font-family: var(--font-display);
+    color: var(--text);
+    margin: 24px 0 12px;
+  }
+  .explanation-content h1 { font-size: 22px; font-weight: 800; }
+  .explanation-content h2 { font-size: 18px; font-weight: 700; color: var(--accent2); }
+  .explanation-content h3 { font-size: 15px; font-weight: 600; }
+
+  .section-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    margin-bottom: 16px;
+    overflow: hidden;
+  }
+  .section-header {
+    padding: 16px 20px;
+    display: flex; align-items: center; justify-content: space-between;
+    cursor: pointer;
+    transition: background 0.15s;
+    user-select: none;
+  }
+  .section-header:hover { background: var(--card2); }
+  .section-header-left { display: flex; align-items: center; gap: 12px; }
+  .section-emoji { font-size: 18px; }
+  .section-title-text {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 14px;
+  }
+  .section-chevron {
+    transition: transform 0.2s;
+    font-size: 12px;
+    color: var(--text3);
+  }
+  .section-chevron.open { transform: rotate(180deg); }
+  .section-body {
+    padding: 0 20px;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease, padding 0.3s;
+    font-size: 14px;
+    line-height: 1.8;
+    color: var(--text2);
+  }
+  .section-body.open { max-height: 2000px; padding: 0 20px 20px; }
+
+  /* ===== FLASHCARDS ===== */
+  .flashcards-controls {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 24px;
+    flex-wrap: wrap; gap: 12px;
+  }
+  .fc-info { font-size: 13px; color: var(--text2); }
+  .fc-nav { display: flex; align-items: center; gap: 12px; }
+  .nav-btn {
+    padding: 8px 16px;
+    background: var(--card);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius-sm);
+    color: var(--text2);
+    font-size: 18px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .nav-btn:hover { background: var(--card2); color: var(--text); border-color: var(--accent); }
+  .fc-counter { font-size: 13px; font-weight: 600; color: var(--text); min-width: 60px; text-align: center; }
+
+  .flashcard-scene {
+    perspective: 1000px;
+    height: 260px;
+    cursor: pointer;
+    margin-bottom: 20px;
+  }
+  .flashcard {
+    width: 100%; height: 100%;
+    position: relative;
+    transform-style: preserve-3d;
+    transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .flashcard.flipped { transform: rotateY(180deg); }
+  .fc-face {
+    position: absolute; inset: 0;
+    backface-visibility: hidden;
+    border-radius: var(--radius);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 32px;
+    text-align: center;
+    border: 1px solid var(--border2);
+  }
+  .fc-front {
+    background: linear-gradient(135deg, rgba(107,94,248,0.1), rgba(107,94,248,0.05));
+    border-color: rgba(107,94,248,0.25);
+  }
+  .fc-back {
+    background: linear-gradient(135deg, rgba(232,147,74,0.08), rgba(232,147,74,0.03));
+    border-color: rgba(232,147,74,0.2);
+    transform: rotateY(180deg);
+  }
+  .fc-badge {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--text3);
+    margin-bottom: 16px;
+  }
+  .fc-front .fc-badge { color: var(--accent2); }
+  .fc-back .fc-badge { color: var(--orange2); }
+  .fc-text {
+    font-family: var(--font-display);
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1.4;
+  }
+  .fc-back .fc-text { font-size: 15px; font-family: var(--font-body); font-weight: 400; color: var(--text2); }
+  .fc-topic {
+    margin-top: 12px;
+    font-size: 11px;
+    color: var(--text3);
+    background: var(--bg3);
+    padding: 4px 10px;
+    border-radius: 100px;
+  }
+  .flip-hint {
+    text-align: center;
+    font-size: 11px;
+    color: var(--text3);
+    margin-bottom: 24px;
+  }
+
+  .fc-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 12px; margin-top: 24px;
+  }
+  .fc-mini {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 14px;
+  }
+  .fc-mini-q { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
+  .fc-mini-a { font-size: 12px; color: var(--text2); display: none; line-height: 1.6; }
+  .fc-mini.revealed .fc-mini-a { display: block; }
+  .fc-mini-toggle {
+    font-size: 11px;
+    color: var(--accent2);
+    cursor: pointer;
+    margin-top: 6px;
+    font-weight: 500;
+  }
+  .fc-mini-toggle:hover { text-decoration: underline; }
+
+  /* ===== QUIZ ===== */
+  .quiz-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 28px; flex-wrap: wrap; gap: 12px;
+  }
+  .quiz-score-badge {
+    background: rgba(74,222,128,0.12);
+    border: 1px solid rgba(74,222,128,0.25);
+    color: var(--green);
+    padding: 6px 14px;
+    border-radius: 100px;
+    font-size: 13px;
+    font-weight: 600;
+  }
+  .difficulty-select {
+    padding: 8px 12px;
+    background: var(--card);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 12px;
+    cursor: pointer;
+    outline: none;
+  }
+  .regen-btn {
+    padding: 8px 16px;
+    background: rgba(107,94,248,0.12);
+    border: 1px solid rgba(107,94,248,0.3);
+    border-radius: var(--radius-sm);
+    color: var(--accent2);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .regen-btn:hover { background: rgba(107,94,248,0.2); }
+
+  .question-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+    margin-bottom: 14px;
+    transition: border-color 0.2s;
+  }
+  .question-card.answered { pointer-events: none; }
+  .q-header {
+    display: flex; align-items: flex-start; justify-content: space-between;
+    margin-bottom: 16px; gap: 12px;
+  }
+  .q-num { font-size: 11px; font-weight: 700; color: var(--text3); letter-spacing: 0.5px; }
+  .diff-badge {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 100px;
+  }
+  .diff-easy { background: rgba(74,222,128,0.12); color: var(--green); }
+  .diff-medium { background: rgba(251,191,36,0.12); color: var(--yellow); }
+  .diff-hard { background: rgba(248,113,113,0.12); color: var(--red); }
+
+  .q-text { font-size: 14.5px; font-weight: 500; color: var(--text); line-height: 1.6; margin-bottom: 16px; }
+  .options { display: flex; flex-direction: column; gap: 8px; }
+  .option {
+    padding: 11px 16px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-size: 13px;
+    color: var(--text2);
+    transition: all 0.15s;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .option:hover { background: var(--card2); border-color: var(--border2); color: var(--text); }
+  .option.correct { background: rgba(74,222,128,0.1); border-color: rgba(74,222,128,0.35); color: var(--green); }
+  .option.wrong { background: rgba(248,113,113,0.08); border-color: rgba(248,113,113,0.3); color: var(--red); }
+  .option.selected { background: rgba(107,94,248,0.1); border-color: rgba(107,94,248,0.3); color: var(--accent2); }
+  .opt-letter {
+    width: 22px; height: 22px;
+    border-radius: 6px;
+    background: var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  .q-explanation {
+    margin-top: 14px;
+    padding: 12px 14px;
+    background: rgba(107,94,248,0.06);
+    border: 1px solid rgba(107,94,248,0.15);
+    border-radius: var(--radius-sm);
+    font-size: 12.5px;
+    color: var(--text2);
+    line-height: 1.7;
+    display: none;
+  }
+  .q-explanation.visible { display: block; }
+
+  /* ===== LOADING ===== */
+  .loading-screen {
+    display: none;
+    position: fixed; inset: 0; z-index: 200;
+    background: rgba(13,13,18,0.92);
+    backdrop-filter: blur(20px);
+    flex-direction: column; align-items: center; justify-content: center;
+    gap: 20px;
+  }
+  .loading-screen.active { display: flex; }
+  .loading-spinner {
+    width: 48px; height: 48px;
+    border: 3px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-text { font-size: 14px; color: var(--text2); }
+  .loading-sub { font-size: 12px; color: var(--text3); margin-top: -8px; }
+
+  /* ===== EMPTY STATE ===== */
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text3);
+  }
+  .empty-icon { font-size: 40px; margin-bottom: 12px; }
+  .empty-text { font-size: 14px; }
+
+  /* ===== TOAST ===== */
+  .toast {
+    position: fixed; bottom: 24px; right: 24px; z-index: 999;
+    background: var(--card2);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius-sm);
+    padding: 12px 18px;
+    font-size: 13px;
+    color: var(--text);
+    box-shadow: var(--shadow);
+    transform: translateY(100px);
+    opacity: 0;
+    transition: all 0.3s;
+    max-width: 320px;
+  }
+  .toast.visible { transform: translateY(0); opacity: 1; }
+  .toast.error { border-color: rgba(248,113,113,0.3); }
+  .toast.success { border-color: rgba(74,222,128,0.3); }
+
+  /* ===== BACK BTN ===== */
+  .back-btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: none;
+    border: none;
+    color: var(--text3);
+    font-size: 12px;
+    cursor: pointer;
+    padding: 8px 0;
+    margin-bottom: 16px;
+    transition: color 0.15s;
+  }
+  .back-btn:hover { color: var(--text); }
+
+  /* ===== GENERATE BTN ===== */
+  .gen-btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 10px 20px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: white;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 4px 16px rgba(107,94,248,0.35);
+  }
+  .gen-btn:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(107,94,248,0.45); }
+  .gen-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+  /* ===== RESPONSIVE ===== */
+  @media (max-width: 900px) {
+    .landing-grid { grid-template-columns: 1fr; gap: 40px; }
+    .study-layout { grid-template-columns: 1fr; }
+    .sidebar { display: none; }
+    .content-area { padding: 24px 20px; }
+  }
+
+  /* ===== STUDY TOOLS ===== */
+  .tools-row {
+    display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 24px;
+  }
+  .tool-chip {
+    padding: 6px 14px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text2);
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex; align-items: center; gap: 5px;
+  }
+  .tool-chip:hover { border-color: var(--accent); color: var(--accent2); background: rgba(107,94,248,0.06); }
+  .tool-chip.active { background: rgba(107,94,248,0.12); border-color: rgba(107,94,248,0.3); color: var(--accent2); }
+
+  /* Focus mode */
+  body.focus-mode nav,
+  body.focus-mode .sidebar,
+  body.focus-mode .tabs,
+  body.focus-mode .tools-row { display: none !important; }
+  body.focus-mode .content-area { padding: 40px; max-width: 720px; margin: 0 auto; }
+  body.focus-mode .study-layout { grid-template-columns: 1fr; }
+
+  /* Scroll to top */
+  .scroll-top {
+    position: fixed; bottom: 24px; left: 24px;
+    width: 40px; height: 40px;
+    background: var(--accent);
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    color: white;
+    font-size: 16px;
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; transform: translateY(10px);
+    transition: all 0.3s;
+    box-shadow: 0 4px 16px rgba(107,94,248,0.4);
+    z-index: 50;
+  }
+  .scroll-top.visible { opacity: 1; transform: translateY(0); }
+  .scroll-top:hover { background: var(--accent2); }
+</style>
+</head>
+<body>
+<div class="bg-blobs"></div>
+
+<!-- NAVBAR -->
+<nav>
+  <a class="nav-logo" href="#" onclick="showLanding()">
+    <div class="logo-avatar">SDD</div>
+    <div class="nav-title-wrap">
+      <span class="nav-name">Stuck Dogs</span>
+      <span class="nav-sub">Dilemma</span>
+    </div>
+  </a>
+  <button class="theme-toggle" onclick="toggleTheme()" title="Toggle theme">🌙</button>
+</nav>
+
+<!-- LOADING OVERLAY -->
+<div class="loading-screen" id="loadingScreen">
+  <div class="loading-spinner"></div>
+  <div class="loading-text" id="loadingText">Processing your content…</div>
+  <div class="loading-sub" id="loadingSub">This may take a moment</div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- SCROLL TO TOP -->
+<button class="scroll-top" id="scrollTopBtn" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
+
+<main>
+<!-- ===== LANDING ===== -->
+<div id="landing">
+  <div class="landing-grid">
+    <div class="landing-left">
+      <div class="ai-badge">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+        AI-Powered Study Assistant
+      </div>
+      <h1 class="hero-title">
+        Master any<br/>
+        subject<br/>
+        <span class="highlight-blue">in</span> <span class="highlight-orange">minutes.</span>
+      </h1>
+      <p class="hero-desc">
+        Paste your lecture notes, textbook excerpts, or upload PDFs. SDD instantly creates a personalized tutor, flashcards, and a practice quiz.
+      </p>
+      <div class="feature-pills">
+        <div class="feature-pill">
+          <div class="pill-icon">📖</div>
+          <div class="pill-label">Deep<br/>Explanations</div>
+        </div>
+        <div class="feature-pill">
+          <div class="pill-icon">🃏</div>
+          <div class="pill-label">Smart<br/>Flashcards</div>
+        </div>
+        <div class="feature-pill">
+          <div class="pill-icon">🎯</div>
+          <div class="pill-label">Practice<br/>Quizzes</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="landing-right">
+      <div class="upload-card">
+        <div class="upload-header">
+          <div class="upload-title">Upload PDFs</div>
+          <div class="upload-limit">Up to 20 files, 50MB each</div>
+        </div>
+
+        <div class="drop-zone" id="dropZone">
+          <input type="file" id="pdfInput" accept=".pdf" multiple onchange="handleFileSelect(this)"/>
+          <div class="drop-icon">⬆</div>
+          <div class="drop-text">
+            Drop PDFs here or <a onclick="document.getElementById('pdfInput').click()">click to browse</a>
+          </div>
+        </div>
+
+        <div id="fileList" style="display:none; margin-bottom:12px;">
+          <div id="fileItems" style="display:flex;flex-direction:column;gap:6px;"></div>
+        </div>
+
+        <div class="divider-or">OR PASTE TEXT</div>
+
+        <textarea
+          class="text-area"
+          id="textInput"
+          placeholder="Paste your lecture notes, textbook excerpts, or any study material here…"
+        ></textarea>
+
+        <button class="start-btn" id="startBtn" onclick="startStudying()">
+          <span>Start Studying</span>
+          <span style="font-size:18px">✦</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== STUDY PAGE ===== -->
+<div id="study-page">
+  <div class="study-layout">
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <div class="sidebar-section">
+        <div class="sidebar-label">Navigation</div>
+        <button class="sidebar-btn active" id="sb-explain" onclick="switchTab('explain')">
+          <span class="s-icon">📖</span> Deep Explanation
+        </button>
+        <button class="sidebar-btn" id="sb-flash" onclick="switchTab('flash')">
+          <span class="s-icon">🃏</span> Flashcards
+        </button>
+        <button class="sidebar-btn" id="sb-quiz" onclick="switchTab('quiz')">
+          <span class="s-icon">❓</span> Practice Quiz
+        </button>
+      </div>
+      <div class="sidebar-divider"></div>
+      <div class="sidebar-section">
+        <div class="sidebar-label">Tools</div>
+        <button class="sidebar-btn" onclick="toggleFocusMode()">
+          <span class="s-icon">🎯</span> Focus Mode
+        </button>
+        <button class="sidebar-btn" onclick="showLanding()">
+          <span class="s-icon">📂</span> New Content
+        </button>
+      </div>
+      <div class="sidebar-divider"></div>
+      <div class="progress-wrap">
+        <div class="progress-label">Session Progress</div>
+        <div class="progress-bar">
+          <div class="progress-fill" id="progressFill" style="width:0%"></div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- CONTENT -->
+    <div class="content-area">
+      <button class="back-btn" onclick="showLanding()">← Back to upload</button>
+
+      <!-- TABS -->
+      <div class="tab-container">
+        <div class="tabs">
+          <button class="tab active" id="tab-explain" onclick="switchTab('explain')">📖 Explanation</button>
+          <button class="tab" id="tab-flash" onclick="switchTab('flash')">🃏 Flashcards</button>
+          <button class="tab" id="tab-quiz" onclick="switchTab('quiz')">❓ Quiz</button>
+        </div>
+      </div>
+
+      <!-- EXPLANATION -->
+      <div class="panel active" id="panel-explain">
+        <div class="tools-row">
+          <div class="tool-chip" onclick="toggleFocusMode()">🎯 Focus Mode</div>
+          <div class="tool-chip" onclick="copyContent()">📋 Copy</div>
+          <div class="tool-chip" onclick="toggleHighlight()">✏️ Highlight Mode</div>
+        </div>
+        <div id="explanationContent" class="empty-state">
+          <div class="empty-icon">📖</div>
+          <div class="empty-text">Explanation will appear here after processing</div>
+        </div>
+      </div>
+
+      <!-- FLASHCARDS -->
+      <div class="panel" id="panel-flash">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px;">
+          <h2 style="font-family:var(--font-display);font-size:18px;font-weight:800;">Smart Flashcards</h2>
+          <button class="gen-btn" id="genFlashBtn" onclick="generateFlashcards()" disabled>
+            ✦ Generate Flashcards
+          </button>
+        </div>
+        <div id="flashcardsContent" class="empty-state">
+          <div class="empty-icon">🃏</div>
+          <div class="empty-text">Click "Generate Flashcards" after processing content</div>
+        </div>
+      </div>
+
+      <!-- QUIZ -->
+      <div class="panel" id="panel-quiz">
+        <div class="quiz-header">
+          <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+            <h2 style="font-family:var(--font-display);font-size:18px;font-weight:800;">Practice Quiz</h2>
+            <select class="difficulty-select" id="difficultySelect">
+              <option value="mixed">Mixed Difficulty</option>
+              <option value="easy">Easy</option>
+              <option value="medium">Medium</option>
+              <option value="hard">Hard</option>
+            </select>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div class="quiz-score-badge" id="scoreDisplay">Score: 0/0</div>
+            <button class="gen-btn" id="genQuizBtn" onclick="generateQuiz()" disabled>
+              ✦ Generate Quiz
+            </button>
+          </div>
+        </div>
+        <div id="quizContent" class="empty-state">
+          <div class="empty-icon">❓</div>
+          <div class="empty-text">Click "Generate Quiz" after processing content</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</main>
+
+<script>
+// ===== OPENROUTER CONFIG =====
+const OPENROUTER_KEY = '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';
+const OR_URL = 'https://openrouter.ai/api/v1/chat/completions';
+const OR_MODEL = 'openrouter/auto';
+
+async function callAI(systemPrompt, userPrompt, maxTokens = 4000) {
+  const resp = await fetch(OR_URL, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${OPENROUTER_KEY}`,
+      'Content-Type': 'application/json',
+      'HTTP-Referer': window.location.href,
+      'X-Title': 'SDD Study Assistant'
+    },
+    body: JSON.stringify({
+      model: OR_MODEL,
+      max_tokens: maxTokens,
+      temperature: 0.7,
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userPrompt }
+      ]
+    })
+  });
+  if (!resp.ok) {
+    const err = await resp.json().catch(() => ({}));
+    throw new Error(err.error?.message || `API error ${resp.status}`);
+  }
+  const data = await resp.json();
+  return data.choices?.[0]?.message?.content || '';
+}
+
+// ===== STATE =====
+let studyContent = '';
+let currentFlashcard = 0;
+let flashcards = [];
+let quizScore = { correct: 0, total: 0 };
+let selectedFiles = [];
+let progress = 0;
+
+// ===== THEME =====
+function toggleTheme() {
+  const html = document.documentElement;
+  const isDark = html.dataset.theme === 'dark';
+  html.dataset.theme = isDark ? 'light' : 'dark';
+  document.querySelector('.theme-toggle').textContent = isDark ? '☀️' : '🌙';
+  localStorage.setItem('theme', html.dataset.theme);
+}
+
+// Load saved theme
+const savedTheme = localStorage.getItem('theme');
+if (savedTheme) {
+  document.documentElement.dataset.theme = savedTheme;
+  document.querySelector('.theme-toggle').textContent = savedTheme === 'dark' ? '🌙' : '☀️';
+}
+
+// ===== NAVIGATION =====
+function showLanding() {
+  document.getElementById('landing').style.display = 'flex';
+  document.getElementById('study-page').style.display = 'none';
+  document.body.classList.remove('focus-mode');
+}
+
+function showStudy() {
+  document.getElementById('landing').style.display = 'none';
+  document.getElementById('study-page').style.display = 'block';
+}
+
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.sidebar-btn').forEach(b => b.classList.remove('active'));
+  
+  document.getElementById(`tab-${name}`).classList.add('active');
+  document.getElementById(`panel-${name}`).classList.add('active');
+  const sb = document.getElementById(`sb-${name === 'explain' ? 'explain' : name === 'flash' ? 'flash' : 'quiz'}`);
+  if (sb) sb.classList.add('active');
+
+  updateProgress(name);
+}
+
+function updateProgress(tab) {
+  const map = { explain: 33, flash: 66, quiz: 100 };
+  progress = Math.max(progress, map[tab] || 0);
+  document.getElementById('progressFill').style.width = progress + '%';
+}
+
+// ===== DRAG & DROP =====
+const dropZone = document.getElementById('dropZone');
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('dragover'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault();
+  dropZone.classList.remove('dragover');
+  const files = [...e.dataTransfer.files].filter(f => f.type === 'application/pdf');
+  if (files.length) addFiles(files);
+});
+
+function handleFileSelect(input) {
+  const files = [...input.files];
+  addFiles(files);
+}
+
+function addFiles(files) {
+  selectedFiles = [...selectedFiles, ...files].slice(0, 20);
+  renderFileList();
+}
+
+function renderFileList() {
+  const list = document.getElementById('fileList');
+  const items = document.getElementById('fileItems');
+  if (selectedFiles.length === 0) { list.style.display = 'none'; return; }
+  list.style.display = 'block';
+  items.innerHTML = selectedFiles.map((f, i) => `
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span style="color:var(--accent2)">📄</span>
+        <span style="font-size:12px;color:var(--text)">${f.name}</span>
+        <span style="font-size:11px;color:var(--text3)">${(f.size/1024/1024).toFixed(1)}MB</span>
+      </div>
+      <button onclick="removeFile(${i})" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:14px;">✕</button>
+    </div>
+  `).join('');
+}
+
+function removeFile(i) {
+  selectedFiles.splice(i, 1);
+  renderFileList();
+}
+
+// ===== MAIN PROCESS =====
+async function startStudying() {
+  const textInput = document.getElementById('textInput').value.trim();
+  const hasPDF = selectedFiles.length > 0;
+  
+  if (!hasPDF && !textInput) {
+    showToast('Please upload a PDF or paste some text first', 'error');
+    return;
+  }
+
+  showLoading('Processing your content…', 'Extracting text and structure…');
+  
+  try {
+    let rawContent = '';
+
+    if (hasPDF) {
+      for (const file of selectedFiles) {
+        const formData = new FormData();
+        formData.append('pdf', file);
+        
+        const resp = await fetch('/api/extract-pdf', { method: 'POST', body: formData });
+        const data = await resp.json();
+        
+        if (data.error) throw new Error(data.error);
+        rawContent += `\n\n=== ${file.name} (${data.pages} pages) ===\n${data.content}`;
+      }
+    } else {
+      rawContent = textInput;
+    }
+
+    if (!rawContent.trim()) throw new Error('No content could be extracted');
+
+    updateLoadingText('Analyzing with AI…', 'Generating deep explanation…');
+
+    const explanation = await callAI(
+      `You are an expert teacher and A+ tutor. Deeply explain ALL content with zero information loss.
+
+For each topic/section provide:
+📌 TITLE
+🧾 FULL EXPLANATION (simple + deep + step-by-step, NO skipping)
+🧠 KEY CONCEPTS (bullet points)
+💡 INTUITION (WHY it works)
+🧪 EXAMPLES (step-by-step with extra examples)
+🔗 CONNECTIONS (link topics together)
+⚠️ COMMON MISTAKES
+🎯 EXAM INSIGHT
+
+Teaching style: Top private tutor, A+ level depth, clear and memorable.`,
+      `Deeply explain ALL of this content with zero information loss:\n\n${rawContent.slice(0, 8000)}`
+    );
+    
+    studyContent = explanation;
+    localStorage.setItem('sdd_content', studyContent);
+    localStorage.setItem('sdd_time', Date.now());
+
+    renderExplanation(studyContent);
+    document.getElementById('genFlashBtn').disabled = false;
+    document.getElementById('genQuizBtn').disabled = false;
+    
+    showStudy();
+    switchTab('explain');
+    hideLoading();
+    showToast('Content processed successfully! ✓', 'success');
+    
+  } catch (err) {
+    hideLoading();
+    showToast('Error: ' + err.message, 'error');
+    console.error(err);
+  }
+}
+
+// ===== RENDER EXPLANATION =====
+function renderExplanation(text) {
+  const container = document.getElementById('explanationContent');
+  container.className = '';
+  
+  // Parse sections by emoji markers
+  const sections = [];
+  const lines = text.split('\n');
+  let current = null;
+  let buffer = [];
+
+  const sectionEmojis = ['📌', '🧾', '🧠', '💡', '🧪', '🔗', '⚠️', '🎯'];
+  
+  for (const line of lines) {
+    const hasEmoji = sectionEmojis.some(e => line.includes(e));
+    if (hasEmoji && line.trim().length > 2) {
+      if (current) { current.body = buffer.join('\n').trim(); sections.push(current); buffer = []; }
+      current = { title: line.trim(), emoji: sectionEmojis.find(e => line.includes(e)) || '📄', body: '' };
+    } else {
+      buffer.push(line);
+    }
+  }
+  if (current) { current.body = buffer.join('\n').trim(); sections.push(current); }
+
+  if (sections.length === 0) {
+    // Fallback: just show as text
+    container.innerHTML = `<div class="explanation-content">${escapeHtml(text)}</div>`;
+    return;
+  }
+
+  container.innerHTML = sections.map((s, i) => `
+    <div class="section-card">
+      <div class="section-header" onclick="toggleSection(${i})">
+        <div class="section-header-left">
+          <span class="section-emoji">${s.emoji}</span>
+          <span class="section-title-text">${escapeHtml(s.title.replace(s.emoji, '').trim())}</span>
+        </div>
+        <span class="section-chevron" id="chev-${i}">▼</span>
+      </div>
+      <div class="section-body ${i === 0 ? 'open' : ''}" id="body-${i}">
+        ${formatBody(s.body)}
+      </div>
+    </div>
+  `).join('');
+}
+
+function toggleSection(i) {
+  const body = document.getElementById(`body-${i}`);
+  const chev = document.getElementById(`chev-${i}`);
+  body.classList.toggle('open');
+  chev.classList.toggle('open');
+}
+
+function formatBody(text) {
+  if (!text) return '';
+  return text
+    .split('\n')
+    .map(line => {
+      if (!line.trim()) return '<br/>';
+      if (line.match(/^#{1,3}\s/)) {
+        const lvl = line.match(/^(#+)/)[1].length;
+        return `<h${lvl + 1}>${escapeHtml(line.replace(/^#+\s/, ''))}</h${lvl + 1}>`;
+      }
+      if (line.match(/^\*\s|^-\s|^\d+\.\s/)) {
+        return `<div style="padding-left:16px;margin:3px 0;">• ${escapeHtml(line.replace(/^[\*\-]\s|^\d+\.\s/, ''))}</div>`;
+      }
+      return `<p style="margin:4px 0;">${escapeHtml(line)}</p>`;
+    })
+    .join('');
+}
+
+function escapeHtml(text) {
+  return text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ===== FLASHCARDS =====
+async function generateFlashcards() {
+  if (!studyContent) { showToast('Process content first', 'error'); return; }
+  
+  showLoading('Generating flashcards…', 'AI is creating study cards');
+  
+  try {
+    const result = await callAI(
+      `You are a flashcard generator. Generate 12 high-quality flashcards from content.
+Return ONLY a valid JSON array, no other text, no markdown fences:
+[{"id":1,"topic":"Topic","front":"Question","back":"Answer"}]`,
+      `Generate flashcards from:\n\n${studyContent.slice(0, 5000)}`
+    );
+    
+    let cleaned = result.trim().replace(/^```json\s*/,'').replace(/^```\s*/,'').replace(/```\s*$/,'').trim();
+    flashcards = JSON.parse(cleaned);
+    currentFlashcard = 0;
+    localStorage.setItem('sdd_flashcards', JSON.stringify(flashcards));
+    
+    renderFlashcards();
+    hideLoading();
+    showToast(`${flashcards.length} flashcards generated! ✓`, 'success');
+    
+  } catch (err) {
+    hideLoading();
+    showToast('Error: ' + err.message, 'error');
+  }
+}
+
+function renderFlashcards() {
+  const container = document.getElementById('flashcardsContent');
+  if (!flashcards.length) { container.innerHTML = '<div class="empty-state"><div class="empty-icon">🃏</div><div>No flashcards yet</div></div>'; return; }
+  
+  const fc = flashcards[currentFlashcard];
+  
+  container.innerHTML = `
+    <div class="flashcards-controls">
+      <div class="fc-info">
+        <span style="color:var(--accent2);font-weight:600">${fc.topic || 'General'}</span>
+        <span style="color:var(--text3);margin-left:8px;">Click card to flip</span>
+      </div>
+      <div class="fc-nav">
+        <button class="nav-btn" onclick="prevCard()">‹</button>
+        <div class="fc-counter">${currentFlashcard + 1} / ${flashcards.length}</div>
+        <button class="nav-btn" onclick="nextCard()">›</button>
+      </div>
+    </div>
+
+    <div class="flashcard-scene" onclick="flipCard()">
+      <div class="flashcard" id="mainCard">
+        <div class="fc-face fc-front">
+          <div class="fc-badge">QUESTION</div>
+          <div class="fc-text">${escapeHtml(fc.front)}</div>
+          <div class="fc-topic">${escapeHtml(fc.topic || 'General')}</div>
+        </div>
+        <div class="fc-face fc-back">
+          <div class="fc-badge">ANSWER</div>
+          <div class="fc-text">${escapeHtml(fc.back)}</div>
+        </div>
+      </div>
+    </div>
+    <div class="flip-hint">🖱️ Click card to reveal answer</div>
+
+    <h3 style="font-family:var(--font-display);font-size:14px;font-weight:700;color:var(--text2);margin-bottom:12px;">All Flashcards</h3>
+    <div class="fc-grid">
+      ${flashcards.map((f, i) => `
+        <div class="fc-mini ${i === currentFlashcard ? 'active' : ''}" id="mini-${i}">
+          <div class="fc-mini-q">${escapeHtml(f.front)}</div>
+          <div class="fc-mini-a">${escapeHtml(f.back)}</div>
+          <div class="fc-mini-toggle" onclick="toggleMini(${i})">Show answer</div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+function flipCard() {
+  document.getElementById('mainCard').classList.toggle('flipped');
+}
+
+function nextCard() {
+  currentFlashcard = (currentFlashcard + 1) % flashcards.length;
+  renderFlashcards();
+}
+
+function prevCard() {
+  currentFlashcard = (currentFlashcard - 1 + flashcards.length) % flashcards.length;
+  renderFlashcards();
+}
+
+function toggleMini(i) {
+  const el = document.getElementById(`mini-${i}`);
+  const toggle = el.querySelector('.fc-mini-toggle');
+  el.classList.toggle('revealed');
+  toggle.textContent = el.classList.contains('revealed') ? 'Hide answer' : 'Show answer';
+}
+
+// ===== QUIZ =====
+async function generateQuiz() {
+  if (!studyContent) { showToast('Process content first', 'error'); return; }
+  
+  const difficulty = document.getElementById('difficultySelect').value;
+  showLoading('Generating quiz…', 'Creating challenging questions');
+  
+  try {
+    const result = await callAI(
+      `You are a quiz generator. Generate 10 MCQ questions. Difficulty: ${difficulty}.
+Return ONLY a valid JSON array, no markdown fences:
+[{"id":1,"difficulty":"easy","question":"Q?","options":["A) opt1","B) opt2","C) opt3","D) opt4"],"correct":0,"explanation":"Why correct"}]
+"correct" is 0-based index of correct option.`,
+      `Generate quiz questions from:\n\n${studyContent.slice(0, 5000)}`
+    );
+    
+    let cleaned = result.trim().replace(/^```json\s*/,'').replace(/^```\s*/,'').replace(/```\s*$/,'').trim();
+    const questions = JSON.parse(cleaned);
+    
+    quizScore = { correct: 0, total: 0 };
+    updateScore();
+    renderQuiz(questions);
+    hideLoading();
+    showToast(`${questions.length} questions generated! ✓`, 'success');
+    
+  } catch (err) {
+    hideLoading();
+    showToast('Error: ' + err.message, 'error');
+  }
+}
+
+function renderQuiz(questions) {
+  const container = document.getElementById('quizContent');
+  const letters = ['A', 'B', 'C', 'D'];
+  
+  container.innerHTML = questions.map((q, qi) => `
+    <div class="question-card" id="qcard-${qi}">
+      <div class="q-header">
+        <div>
+          <div class="q-num">QUESTION ${qi + 1}</div>
+          <div class="q-text">${escapeHtml(q.question)}</div>
+        </div>
+        <span class="diff-badge diff-${q.difficulty || 'medium'}">${q.difficulty || 'medium'}</span>
+      </div>
+      <div class="options">
+        ${q.options.map((opt, oi) => `
+          <div class="option" id="opt-${qi}-${oi}" onclick="answerQuestion(${qi}, ${oi}, ${q.correct})">
+            <div class="opt-letter">${letters[oi]}</div>
+            ${escapeHtml(opt.replace(/^[A-D]\)\s*/, ''))}
+          </div>
+        `).join('')}
+      </div>
+      <div class="q-explanation" id="exp-${qi}">
+        💡 ${escapeHtml(q.explanation || 'This is the correct answer.')}
+      </div>
+    </div>
+  `).join('');
+}
+
+function answerQuestion(qi, selectedIdx, correctIdx) {
+  const card = document.getElementById(`qcard-${qi}`);
+  if (card.classList.contains('answered')) return;
+  
+  card.classList.add('answered');
+  
+  const opts = card.querySelectorAll('.option');
+  opts[selectedIdx].classList.add(selectedIdx === correctIdx ? 'correct' : 'wrong');
+  opts[correctIdx].classList.add('correct');
+  
+  document.getElementById(`exp-${qi}`).classList.add('visible');
+  
+  quizScore.total++;
+  if (selectedIdx === correctIdx) quizScore.correct++;
+  updateScore();
+}
+
+function updateScore() {
+  document.getElementById('scoreDisplay').textContent = `Score: ${quizScore.correct}/${quizScore.total}`;
+}
+
+// ===== UTILS =====
+function showLoading(text, sub) {
+  document.getElementById('loadingText').textContent = text;
+  document.getElementById('loadingSub').textContent = sub;
+  document.getElementById('loadingScreen').classList.add('active');
+}
+
+function updateLoadingText(text, sub) {
+  document.getElementById('loadingText').textContent = text;
+  document.getElementById('loadingSub').textContent = sub;
+}
+
+function hideLoading() {
+  document.getElementById('loadingScreen').classList.remove('active');
+}
+
+function showToast(msg, type = '') {
+  const toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.className = `toast ${type}`;
+  requestAnimationFrame(() => { toast.classList.add('visible'); });
+  setTimeout(() => toast.classList.remove('visible'), 3500);
+}
+
+function copyContent() {
+  navigator.clipboard.writeText(studyContent).then(() => showToast('Copied to clipboard ✓', 'success'));
+}
+
+function toggleFocusMode() {
+  document.body.classList.toggle('focus-mode');
+  showToast(document.body.classList.contains('focus-mode') ? '🎯 Focus mode on' : '👁 Focus mode off');
+}
+
+function toggleHighlight() {
+  document.body.classList.toggle('highlight-mode');
+  showToast(document.body.classList.contains('highlight-mode') ? '✏️ Highlight mode on — select text!' : 'Highlight mode off');
+}
+
+// ===== SCROLL TO TOP =====
+window.addEventListener('scroll', () => {
+  const btn = document.getElementById('scrollTopBtn');
+  if (window.scrollY > 300) btn.classList.add('visible');
+  else btn.classList.remove('visible');
+});
+
+// ===== KEYBOARD SHORTCUTS =====
+document.addEventListener('keydown', e => {
+  if (document.getElementById('study-page').style.display === 'none') return;
+  if (e.key === 'ArrowRight') nextCard();
+  if (e.key === 'ArrowLeft') prevCard();
+  if (e.key === ' ' && document.getElementById('panel-flash').classList.contains('active')) {
+    e.preventDefault(); flipCard();
+  }
+});
+
+// ===== RESTORE SESSION =====
+window.addEventListener('load', () => {
+  const saved = localStorage.getItem('sdd_content');
+  const savedFC = localStorage.getItem('sdd_flashcards');
+  const savedTime = localStorage.getItem('sdd_time');
+  
+  if (saved && savedTime && (Date.now() - savedTime) < 24 * 60 * 60 * 1000) {
+    studyContent = saved;
+    if (savedFC) { try { flashcards = JSON.parse(savedFC); } catch(e) {} }
+  }
+});
+</script>
+</body>
+</html>
