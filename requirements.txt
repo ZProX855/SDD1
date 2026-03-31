@@ -1,5 +1,8 @@
 flask
 flask-cors
 pdfplumber
+pdf2image
+pytesseract
+pillow
 requests
 gunicorn
